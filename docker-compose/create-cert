@@ -6,9 +6,9 @@ if [ -z "$1" ]; then
 fi
 
 # Create a certificate with the given client name
-docker-compose run --rm openvpn easyrsa build-client-full "$1"
+docker-compose run --rm openvpn easyrsa build-client-full "$1" && \
 
 # Retrieves the certificate created
-mkdir -p clients
-docker-compose run --rm openvpn ovpn_getclient "$1" > clients/"$1".ovpn
+mkdir -p clients && \
+docker-compose run --rm openvpn ovpn_getclient "$1" > clients/"$1".ovpn && \
 echo "$1".ovpn can be found in the clients directory

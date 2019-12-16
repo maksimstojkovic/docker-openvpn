@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ -z "$1" ]; then
-  echo ERROR: Enter your FQDN VPN domain as the first argument.
+  echo ERROR: Enter your VPN domain as the first argument.
   exit 1
 fi
 
@@ -10,10 +10,11 @@ if [ -d "./openvpn-data" ]; then
 fi
 
 # Initialises the OpenVPN server configuration files and certificates
-# Use when keeping the CA Root Key on the VPN server (not recommended)
+# Use when keeping the CA Root Key on a different device from the VPN server
 # This process refers to the same password throughout
 docker-compose run --rm openvpn ovpn_genconfig -u udp://"$1"
 docker-compose run --rm openvpn ovpn_initpki
+docker-compose run --rm openvpn ovpn_copy_server_files
 
 # Fixes ownership issues related to the files in the hosted volume
 sudo chown -R $(whoami): ./openvpn-data

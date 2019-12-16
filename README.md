@@ -2,6 +2,23 @@
 
 Repo modified to aid the use of `docker-compose` during setup and common server actions. Docker image `silentdigit/openvpn` is built for multiple architectures to simplify transferring between platforms.
 
+To increase security, manage the CA Root Key on another device (not the VPN server), storing files on removable media to minimise the risk of compromise. This device will be used for generating certificates only, with vulnerable files (especially private keys) being kept offline when not in use (keys are effectively generated on one device and used on another, where the second device lacks the files necessary to create new keys). To implement this, use the following procedure, where *Device A* is the certificate generating device and *Device B* is the VPN server:
+
+1. Using *Device A*, clone the repo onto a removable media device.
+2. Navigate to the cloned repo and run `init-server <vpn-domain>`.
+3. Enter your `<vpn-domain>` when asked and use a strong password to secure the CA Root Key (weak passwords are known to cause errors).
+4. Generate certificates for any clients that will connect to the VPN server using `create-cert <user>`, entering a password for the `<user>` specified and the CA Root Key password when required.
+5. Export the CA server files from *Device A* using `gen-ca-server-files` (exported files are stored in `openvpn-data/server`).
+6. Clone the repo on *Device B* and copy the files from `openvpn-data/server` on *Device A* to a new directory named `openvpn-data` on *Device B* (e.g. using `scp`)
+7. Retrieve the client certificates using `get-cert <user>` and install it on client devices.
+8. Start the server using `start-server` and connect to the VPN server.
+
+### TODO
+
+- [ ] Make scripts for CA separate from vpn server (either as a different service or by enabling relative paths)
+- [ ] Test running from a USB to determine how data can be kept offline
+- [ ] Determine how
+
 [![Build Status](https://travis-ci.org/kylemanna/docker-openvpn.svg)](https://travis-ci.org/kylemanna/docker-openvpn)
 [![Docker Stars](https://img.shields.io/docker/stars/kylemanna/openvpn.svg)](https://hub.docker.com/r/kylemanna/openvpn/)
 [![Docker Pulls](https://img.shields.io/docker/pulls/kylemanna/openvpn.svg)](https://hub.docker.com/r/kylemanna/openvpn/)
