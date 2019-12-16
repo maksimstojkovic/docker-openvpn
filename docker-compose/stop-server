@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# Stops the OpenVPN server without deleting containers
+docker-compose down

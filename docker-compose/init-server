@@ -1,0 +1,18 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+  echo ERROR: Enter your VPN domain as the first argument.
+  exit 1
+fi
+
+if [ -d "./openvpn-data" ]; then
+  echo WARNING: Server has already been initialised.
+fi
+
+# Initialises the OpenVPN server configuration files and certificates
+# This process refers to the same password throughout
+docker-compose run --rm openvpn ovpn_genconfig -u udp://"$1"
+docker-compose run --rm openvpn ovpn_initpki
+
+# Fixes ownership issues related to the files in the hosted volume
+sudo chown -R $(whoami): ./openvpn-data
