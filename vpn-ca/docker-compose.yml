@@ -1,8 +1,13 @@
 version: '2'
+
+# Base docker-compose file modified for Root CA
+
 services:
-  openvpn-ca:
+  openvpn:
     image: silentdigit/openvpn:latest
     container_name: openvpn
+    environment:
+      - EASYRSA_KEY_SIZE=4096
     restart: unless-stopped
     volumes:
      - ./openvpn-data-ca:/etc/openvpn

@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+  echo ERROR: Enter your client name as the first argument.
+  exit 1
+fi
+
+# Retrieves the certificate and client config for a given client
+mkdir -p clients && \
+docker-compose run --rm openvpn ovpn_getclient "$1" > clients/"$1".ovpn && \
+echo "$1".ovpn can be found in the clients directory

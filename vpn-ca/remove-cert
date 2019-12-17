@@ -6,6 +6,6 @@ if [ -z "$1" ]; then
 fi
 
 # Revokes a certificate and deletes its crt, key and req files
-docker-compose run --rm openvpn ovpn_revokeclient "$1" remove
-rm -f clients/"$1".ovpn
+docker-compose run --rm openvpn ovpn_revokeclient "$1" remove && \
+rm -f clients/"$1".ovpn && \
 rmdir --ignore-fail-on-non-empty clients

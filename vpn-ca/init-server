@@ -14,8 +14,8 @@ fi
 # Use on the server device when storing the CA root key on the VPN server (not recommended)
 
 # This process will ask for the same root CA password throughout
-docker-compose run --rm openvpn ovpn_genconfig -u udp://"$1"
-docker-compose run --rm openvpn ovpn_initpki
+docker-compose run --rm openvpn ovpn_genconfig -u udp://"$1" && \
+docker-compose run --rm openvpn ovpn_initpki && \
 
 # Fixes file ownership issue encountered when copying files
-sudo chown -R $(whoami): ./openvpn-data
+sudo chown -R $(whoami): ./openvpn-data-ca
