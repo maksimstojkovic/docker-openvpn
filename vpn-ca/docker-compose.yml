@@ -1,0 +1,8 @@
+version: '2'
+services:
+  openvpn-ca:
+    image: silentdigit/openvpn:latest
+    container_name: openvpn
+    restart: unless-stopped
+    volumes:
+     - ./openvpn-data-ca:/etc/openvpn
