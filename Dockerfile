@@ -1,13 +1,13 @@
 # Original credit: https://github.com/jpetazzo/dockvpn
 
-# Smallest base image
+# Smallest base image (modified for stability)
 FROM alpine:3.8
 
-LABEL maintainer="Kyle Manna <kyle@kylemanna.com>"
+LABEL maintainer="Silentdigit"
 
 # Testing: pamtester
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing/" >> /etc/apk/repositories && \
-    apk add --update openvpn iptables bash easy-rsa openvpn-auth-pam google-authenticator pamtester && \
+    apk add --no-cache openvpn iptables bash easy-rsa openvpn-auth-pam google-authenticator pamtester && \
     ln -s /usr/share/easy-rsa/easyrsa /usr/local/bin && \
     rm -rf /tmp/* /var/tmp/* /var/cache/apk/* /var/cache/distfiles/*
 
@@ -27,7 +27,7 @@ EXPOSE 1194/udp
 
 CMD ["ovpn_run"]
 
-ADD ./bin /usr/local/bin
+COPY ./bin /usr/local/bin
 RUN chmod a+x /usr/local/bin/*
 
 # Add support for OTP authentication using a PAM module

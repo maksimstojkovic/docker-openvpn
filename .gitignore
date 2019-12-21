@@ -3,3 +3,4 @@ docker-compose/*/
 clients/
 openvpn-data-server/
 openvpn-data-ca/
+planning.md

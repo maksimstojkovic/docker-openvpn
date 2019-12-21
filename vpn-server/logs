@@ -1,4 +1,0 @@
-#!/bin/bash
-
-# Output and follow logs for the OpenVPN server
-docker-compose logs -f
