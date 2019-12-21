@@ -150,11 +150,22 @@ wait_input() {
   read -n 1 -s
 }
 
+print_menu() {
+  if [ -z "$1" ]; then
+    exit 1
+  fi
+
+  arr=("$@")
+  for i in ${!arr[@]}; do
+    echo "$((${i} + 1))) ${arr[${i}]}"
+  done
+}
+
 # Variables
 main_opts=("Start Server" "Stop Server" "Restart Server" "Remove Server Container" "Manage Server" "Quit")
 manage_opts=("List User Certificates" "Create User Certificate" "Get User Certificate" "Revoke User Certificate" "Remove User Certificate" "Initialise Server" "Generate Server Files" "Return to Main Menu")
 
-DOCKER_IMAGE="openvpn"
+DOCKER_IMAGE="silentdigit/openvpn"
 CA_NAME="openvpn_ca"
 SERVER_NAME="openvpn_server"
 
@@ -171,17 +182,5 @@ fi
 CA_PARAMS=" -it --rm --name ${CA_NAME} -v ${CA_DIR}:/etc/openvpn --log-driver=none --net=none ${DOCKER_IMAGE}"
 SERVER_PARAMS="-d --name ${SERVER_NAME} -v ${SERVER_DIR}:/etc/openvpn -p 1194:1194/udp --cap-add=NET_ADMIN ${DOCKER_IMAGE}"
 
-#main_menu
-
-print_menu() {
-  if [ -z "$1" ]; then
-    exit 1
-  fi
-
-  arr=("$@")
-  for i in ${!arr[@]}; do
-    echo "$((${i} + 1))) ${arr[${i}]}"
-  done
-}
-
+# Start main menu
 main_menu
