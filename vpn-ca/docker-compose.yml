@@ -1,9 +1,6 @@
 version: '2'
-
-# Base docker-compose file modified for Root CA
-
 services:
-  openvpn:
+  openvpn-ca:
     image: silentdigit/openvpn:latest
     container_name: openvpn
     environment:

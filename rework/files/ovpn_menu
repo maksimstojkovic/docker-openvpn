@@ -1,0 +1,174 @@
+#!/bin/bash
+
+# Interactive menu for openvpn server setup and configuration
+
+main_menu() {
+  clear
+  while true; do
+    COLUMNS=12
+    PS3="Please enter your choice: "
+
+    echo "Main Menu:"
+    options=("Start Server" "Stop Server" "Restart Server" "Remove Server Container" "Manage Server" "Quit")
+    select opt in "${options[@]}"
+    do
+      case $REPLY in
+        "1")
+          # Start server
+          echo "Starting VPN server"
+          docker run ${SERVER_PARAMS}
+          break;;
+        "2")
+          # Stop server
+          echo "Stopping VPN server"
+          docker stop ${SERVER_NAME}
+          break;;
+        "3")
+          # Restart server
+          echo "Restarting VPN server"
+          docker restart ${SERVER_NAME}
+          break;;
+        "4")
+          # Remove server container
+          echo "Stopping VPN server and removing container"
+          docker stop ${SERVER_NAME} && docker rm ${SERVER_NAME}
+          break;;
+        "5")
+          # Manage server
+          management_menu
+          break;;
+        "6")
+          # Quit
+          clear
+          return
+          break;;
+        *)
+          echo "Invalid Option: $REPLY";;
+      esac
+    done
+    echo
+  done
+}
+
+management_menu() {
+  clear
+  while true; do
+    COLUMNS=12
+    PS3="Please enter your choice: "
+
+    echo "Server Management:"
+    options=("List User Certificates" "Create User Certificate" "Get User Certificate" "Revoke User Certificate" "Remove User Certificate" "Initialise Server" "Generate Server Files" "Return to Main Menu")
+    select opt in "${options[@]}"; do
+      case $REPLY in 
+        "1")
+          # List user certificates
+          echo "User Certificates:"
+          list_user
+          break;;
+        "2")
+          # Create user certificate
+          echo "Creating user certificate"
+          create_user
+          break;;
+        "3")
+          # Get user certificate
+          echo "Getting user certificate"
+          get_user
+          break;;
+        "4")
+          # Revoke user certificate
+          echo "Revoking user certificate"
+          revoke_user
+          break;;
+        "5")
+          # Remove user certificate
+          echo "Removing user certificate"
+          remove_user
+          break;;
+        "6")
+          # Initialise server
+          echo "Initialising VPN server"
+          init_server
+          break;;
+        "7")
+          # Generate server files
+          echo "Generating VPN server files"
+          gen_files
+          break;;
+        "8")
+          # Return to menu
+          return
+          break;;
+        *)
+          echo "Invalid Option: $REPLY"
+          break;;
+      esac
+    done
+    echo
+  done
+}
+
+init_server() {
+  echo "You will be asked to enter you VPN FQDN, common name and CA root key password (password required multiple times)"
+  echo "Ensure that your CA root key password is long and secure"
+
+  read -rp "VPN FQDN (domain): " VPN_DOMAIN
+  VPN_DOMAIN=$(echo ${VPN_DOMAIN} | awk '{print tolower($0)}')
+  docker run ${CA_PARAMS} ovpn_genconfig -u udp://${VPN_DOMAIN}
+  docker run ${CA_PARAMS} ovpn_initpki
+}
+
+gen_files() {
+  docker run ${CA_PARAMS} ovpn_copy_server_files
+  mv -f ${CA_DIR}/server ${SERVER_DIR}
+  echo "Server files can be found at '${SERVER_DIR}'"
+}
+
+list_user() {
+  DOMAIN=$(head -n 1 openvpn-data-ca/pki/index.txt)
+  DOMAIN=${DOMAIN#*CN=}
+
+  ls -I ${DOMAIN}.crt --width=12 openvpn-data-ca/pki/issued | sed 's|\.crt||g'
+}
+
+create_user() {
+  read -rp "Username: " CLIENTNAME
+  docker run ${CA_PARAMS} easyrsa build-client-full ${CLIENTNAME}
+}
+
+get_user() {
+  read -rp "Username: " CLIENTNAME
+  docker run ${CA_PARAMS} ovpn_getclient ${CLIENTNAME} > ${CLIENT_DIR}/${CLIENTNAME}.ovpn
+}
+
+revoke_user() {
+  read -rp "Username: " CLIENTNAME
+  docker run ${CA_PARAMS} ovpn_revokeclient ${CLIENTNAME}
+}
+
+remove_user() {
+  read -rp "Username: " CLIENTNAME
+  docker run ${CA_PARAMS} ovpn_revokeclient ${CLIENTNAME} remove
+}
+
+# Variables
+DOCKER_IMAGE="openvpn"
+CA_NAME="openvpn_ca"
+SERVER_NAME="openvpn_server"
+#DOCKER_USER="$(id -u):$(id -g)"
+
+CLIENT_DIR="${PWD}/clients"
+
+if [ -z "$CA_DIR" ]; then
+  export CA_DIR=${PWD}/openvpn-data-ca
+fi
+
+if [ -z "$SERVER_DIR" ]; then
+  export SERVER_DIR=${PWD}/openvpn-data-server
+fi
+
+#--user ${DOCKER_USER}
+CA_PARAMS=" -it --rm --name ${CA_NAME} -v ${CA_DIR}:/etc/openvpn --log-driver=none --net=none ${DOCKER_IMAGE}"
+SERVER_PARAMS="-d --name ${SERVER_NAME} -v ${SERVER_DIR}:/etc/openvpn -p 1194:1194/udp --cap-add=NET_ADMIN ${DOCKER_IMAGE}"
+
+main_menu

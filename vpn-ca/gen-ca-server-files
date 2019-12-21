@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Generates VPN server configuration files at openvpn-data/server
-docker-compose run --rm openvpn ovpn_copy_server_files && \
+docker-compose run --rm openvpn ovpn_copy_server_files
 
 # Fixes ownership issues related to the files in the hosted volume
-sudo chown -R $(whoami): ./openvpn-data-ca/server && \
+sudo chown -R $(whoami): ./openvpn-data/server
 
 # Changes server file directory name for ease of use
-mv ./openvpn-data-ca/server ./openvpn-data-ca/openvpn-data-server
+mv ./openvpn-data/server ./openvpn-data/openvpn-server

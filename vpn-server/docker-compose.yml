@@ -1,7 +1,4 @@
 version: '2'
-
-# Base docker-compose file modified for VPN server
-
 services:
   openvpn:
     cap_add:
