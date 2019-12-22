@@ -1,6 +1,9 @@
 #!/bin/bash
 
-# Interactive menu for openvpn server setup and configuration
+# Interactive Menu Managing an OpenVPN Docker Container
+# Supports CA Root and Server File Separation
+
+# Maintained by Maksim Stojkovic - https://github.com/silentdigit
 
 main_menu() {
   while true; do
@@ -8,42 +11,85 @@ main_menu() {
 
     echo "Main Menu:"
     print_menu "${main_opts[@]}"
-    read -N 1 -p "Please enter your choice: " RESPONSE && \
+    echo
+
+    read -n 1 -p "Please enter your choice: " RESPONSE && \
       echo && [ "$RESPONSE" != $'\n' ] && echo
 
     case ${RESPONSE} in
+      "0")
+        # Quit
+        clear
+        return;;
       "1")
         # Start server
-        echo "Starting VPN server"
-        [ "$(docker ps -a | grep ${SERVER_NAME} | wc -l)" -gt "0" ] && docker start ${SERVER_NAME} || docker run ${SERVER_PARAMS}
+        start_server
         wait_input;;
       "2")
         # Stop server
-        echo "Stopping VPN server"
-        docker stop ${SERVER_NAME}
+        stop_server
         wait_input;;
       "3")
         # Restart server
-        echo "Restarting VPN server"
-        docker restart ${SERVER_NAME}
+        restart_server
         wait_input;;
       "4")
         # Remove server container
-        echo "Stopping VPN server and removing container"
-        docker stop ${SERVER_NAME} && docker rm ${SERVER_NAME}
+        remove_server
+#        docker stop ${SERVER_NAME} && docker rm ${SERVER_NAME}
         wait_input;;
       "5")
         # Manage server
         management_menu;;
-      "6")
-        # Quit
-        clear
-        return;;
       *)
         echo "Invalid option. Try again."
         wait_input;;
     esac
   done
+}
+
+start_server() {
+
+  # Initialise CA before starting server
+  [ ! -d "$CA_DIR" ] && echo "ERROR: Initialise server before proceeding" && return 1
+
+  # Exit if server already started
+  container_running $SERVER_NAME && echo "VPN server already running" && return 0
+
+  # Generate server files before starting if CA exists
+  [ -d "$CA_DIR" ] && echo "Updating VPN server files" && gen_files && \
+
+  # Start server if it exists, otherwise run a new server container
+  echo "Starting VPN server" && \
+  container_exists $SERVER_NAME && docker start $SERVER_NAME || docker run $SERVER_PARAMS
+  return 0
+}
+
+stop_server() {
+  # Return if server container does not exist
+  ! container_exists $SERVER_NAME && echo "ERROR: No VPN server container exists" && return 1
+
+  # Stop server if container is running
+  container_running $SERVER_NAME && echo "Stopping VPN server" && docker stop $SERVER_NAME || echo "VPN server already stopped"
+  return 0
+}
+
+restart_server() {
+  # Return if server container does not exist
+  ! container_exists $SERVER_NAME && echo "ERROR: No VPN server container exists" && return 1
+
+  # Return if server not currently running
+  ! container_running $SERVER_NAME && echo "VPN server not currently running" && return 0
+
+  # Restart server if container is running
+  echo "Restarting VPN server" && docker restart $SERVER_NAME
+  return 0
+}
+
+remove_server() {
+  # Removing stopped server container
+  stop_server && echo "Removing VPN server container" && docker rm $SERVER_NAME
+  return 0
 }
 
 management_menu() {
@@ -52,10 +98,16 @@ management_menu() {
 
     echo "Server Management:"
     print_menu "${manage_opts[@]}"
-    read -N 1 -p "Please enter your choice: " RESPONSE && \
+    echo
+
+    read -n 1 -p "Please enter your choice: " RESPONSE && \
       echo && [ "$RESPONSE" != $'\n' ] && echo
 
     case ${RESPONSE} in
+      "0")
+        # Return to main menu
+        clear
+        return;;
       "1")
         # List user certificates
         echo "User Certificates:"
@@ -91,10 +143,6 @@ management_menu() {
         echo "Generating VPN server files"
         gen_files
         wait_input;;
-      "8")
-        # Return to menu
-        clear
-        return;;
       *)
         echo "Invalid option. Try again."
         wait_input;;
@@ -114,6 +162,7 @@ init_server() {
 
 gen_files() {
   docker run ${CA_PARAMS} ovpn_copy_server_files
+  rm -rf ${SERVER_DIR}
   mv -f ${CA_DIR}/server ${SERVER_DIR}
   echo "Server files can be found at '${SERVER_DIR}'"
 }
@@ -132,6 +181,7 @@ create_user() {
 
 get_user() {
   read -rp "Username: " CLIENTNAME
+  mkdir -p ${CLIENT_DIR}
   docker run ${CA_PARAMS} ovpn_getclient ${CLIENTNAME} > ${CLIENT_DIR}/${CLIENTNAME}.ovpn
 }
 
@@ -157,8 +207,23 @@ print_menu() {
 
   arr=("$@")
   for i in ${!arr[@]}; do
-    echo "$((${i} + 1))) ${arr[${i}]}"
+    [ "$i" -lt "$((${#arr[@]} - 1))" ] && echo "$((${i} + 1))) ${arr[${i}]}" || echo "0) ${arr[${i}]}"
   done
+}
+
+container_exists() {
+  # Exit if no container passed
+  [ -z "$1" ] && exit 1
+
+  # Return 0 if inspect returns successfully
+  docker container inspect "$1" > /dev/null 2>&1 && return 0 || return 1
+}
+
+container_running() {
+  # Exit if no container name passed
+  [ -z "$1" ] && exit 1
+
+  [ "$(docker inspect -f '{{.State.Running}}' "$1" 2>/dev/null)" = "true" ] && return 0 || return 1
 }
 
 # Variables
@@ -179,7 +244,7 @@ if [ -z "$SERVER_DIR" ]; then
   export SERVER_DIR=${PWD}/openvpn-data-server
 fi
 
-CA_PARAMS=" -it --rm --name ${CA_NAME} -v ${CA_DIR}:/etc/openvpn --log-driver=none --net=none ${DOCKER_IMAGE}"
+CA_PARAMS=" -it --rm --name ${CA_NAME} -v ${CA_DIR}:/etc/openvpn --log-driver=none ${DOCKER_IMAGE}"
 SERVER_PARAMS="-d --name ${SERVER_NAME} -v ${SERVER_DIR}:/etc/openvpn -p 1194:1194/udp --cap-add=NET_ADMIN ${DOCKER_IMAGE}"
 
 # Start main menu
