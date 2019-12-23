@@ -1,5 +1,5 @@
 docker-compose/*/
 planning.md
 
-scripts/*
-!scripts/ovpn_menu
+menu/*
+!menu/ovpn_menu

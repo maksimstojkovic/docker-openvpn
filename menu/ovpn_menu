@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Interactive Menu Managing an OpenVPN Docker Container
 # Supports CA Root and Server File Separation
