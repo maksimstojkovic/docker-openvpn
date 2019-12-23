@@ -33,4 +33,4 @@ Initialising the CA automatically generates:
 
 ## Security
 
-When not using the CA to manage user certificates, it is recommended that CA files are encrypted and stored offline on removable media devices. This can be done using `5) Manage Server -> 6) Encrypt CA / 7) Decrypt CA`.
+When not using the CA to manage user certificates, it is recommended that CA files are encrypted and stored offline on removable media devices. This can be done using `5) Manage Server -> 6) Encrypt CA` and `5) Manage Server -> 7) Decrypt CA`.
