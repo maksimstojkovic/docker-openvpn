@@ -5,6 +5,7 @@ on: [push]
 env:
   USERNAME: silentdigit
   PROJECT: openvpn
+  MB_HOOK: https://hooks.microbadger.com/images/silentdigit/openvpn/3K0DVOQdant7j9vY0hpbG-VAdn8=
 
 jobs:
   
@@ -52,3 +53,6 @@ jobs:
 
           # Build image as latest version
           docker buildx build -t ${USERNAME}/${PROJECT}:latest --platform=linux/amd64,linux/arm/v7,linux/arm64 --build-arg VCS_REF=$(git rev-parse --short HEAD) --push .
+
+          # Update MicroBadger metadata
+          curl -X POST "$MB_HOOK"

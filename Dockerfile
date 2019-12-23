@@ -1,6 +1,8 @@
 # Smallest base image (modified for stability)
 FROM alpine:3.8
 
+ARG VCS_REF
+
 LABEL maintainer="Maksim Stojkovic <https://github.com/silentdigit>" \
       org.label-schema.vcs-ref=$VCS_REF \
       org.label-schema.vcs-url="https://github.com/silentdigit/docker-openvpn"
