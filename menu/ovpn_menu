@@ -3,7 +3,7 @@
 # Interactive Menu Managing an OpenVPN Docker Container
 # Supports CA Root and Server File Separation
 
-# Maintained by Maksim Stojkovic - https://github.com/silentdigit
+# Maintained by Maksim Stojkovic <https://github.com/silentdigit>
 
 ####### Menu Functions #######
 main_menu() {
