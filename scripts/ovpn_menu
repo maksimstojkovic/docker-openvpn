@@ -17,7 +17,7 @@ main_menu() {
     read -n 1 -p "Please enter your choice: " RESPONSE && \
       echo && [ "$RESPONSE" != $'\n' ] && echo
 
-    case ${RESPONSE} in
+    case "$RESPONSE" in
       "0")
         # Quit
         clear
@@ -37,12 +37,12 @@ main_menu() {
       "4")
         # Remove server container
         remove_server
-#        docker stop ${SERVER_NAME} && docker rm ${SERVER_NAME}
         wait_input;;
       "5")
         # Manage server
         management_menu;;
       *)
+        # Invalid response
         echo "Invalid option. Try again."
         wait_input;;
     esac
@@ -50,50 +50,67 @@ main_menu() {
 }
 
 start_server() {
-
   # Return if no server files can be found or generated
-  ! ca_dir_exists && ! server_dir_exists && echo "ERROR: Initialise CA and/or generate server files before starting VPN server" && return 1
+  ! ca_dir_exists && ! server_dir_exists && \
+  echo "ERROR: Initialise CA and/or generate server files before starting VPN" && \
+  return 1
 
   # Exit if server already started
-  container_running $SERVER_NAME && echo "VPN server already running" && return 0
+  container_running "$SERVER_NAME" && \
+  echo "VPN server already running" && \
+  return 0
 
   # Generate server files before starting if CA exists
-  ca_dir_exists && echo "Updating VPN server files" && gen_files
+  ca_dir_exists && \
+  echo "Updating VPN server files" && \
+  gen_files
 
   # Start server if it exists, otherwise run a new server container
   echo "Starting VPN server" && \
-  container_exists $SERVER_NAME && docker start $SERVER_NAME || docker run $SERVER_PARAMS
-  return 0
+  container_exists "$SERVER_NAME" && \
+  (docker start "$SERVER_NAME") || \
+  (docker run $SERVER_PARAMS)
 }
 
 stop_server() {
   # Return if server container does not exist
-  ! container_exists $SERVER_NAME && echo "No VPN server container exists" && return 0
+  ! container_exists $SERVER_NAME && \
+  echo "No VPN server container exists" && \
+  return 0
 
   # Stop server if container is running
-  container_running $SERVER_NAME && echo "Stopping VPN server" && docker stop $SERVER_NAME || echo "VPN server already stopped"
-  return 0
+  container_running $SERVER_NAME && \
+  (echo "Stopping VPN server" && \
+  docker stop "$SERVER_NAME") || \
+  (echo "VPN server already stopped")
 }
 
 restart_server() {
   # Return if server container does not exist
-  ! container_exists $SERVER_NAME && echo "No VPN server container exists" && return 0
+  ! container_exists "$SERVER_NAME" && \
+  echo "No VPN server container exists" && \
+  return 0
 
   # Return if server not currently running
-  ! container_running $SERVER_NAME && echo "VPN server not currently running" && return 0
+  ! container_running "$SERVER_NAME" && \
+  echo "VPN server not currently running" && \
+  return 0
 
   # Restart server if container is running
-  echo "Restarting VPN server" && docker restart $SERVER_NAME
-  return 0
+  echo "Restarting VPN server" && \
+  docker restart "$SERVER_NAME"
 }
 
 remove_server() {
   # Return if server container does not exist
-  ! container_exists $SERVER_NAME && echo "No VPN server container exists" && return 0
+  ! container_exists "$SERVER_NAME" && \
+  echo "No VPN server container exists" && \
+  return 0
 
   # Removing stopped server container
-  stop_server && echo "Removing VPN server container" && docker rm $SERVER_NAME && \
-  return 0
+  stop_server && \
+  echo "Removing VPN server container" && \
+  docker rm "$SERVER_NAME"
 }
 
 management_menu() {
@@ -107,7 +124,7 @@ management_menu() {
     read -n 1 -p "Please enter your choice: " RESPONSE && \
       echo && [ "$RESPONSE" != $'\n' ] && echo
 
-    case ${RESPONSE} in
+    case "$RESPONSE" in
       "0")
         # Return to main menu
         clear
@@ -124,19 +141,27 @@ management_menu() {
         # Get user certificate
         get_user
         wait_input;;
+      # "4")
+      #   # Revoke user certificate
+      #   revoke_user
+      #   wait_input;;
       "4")
-        # Revoke user certificate
-        revoke_user
-        wait_input;;
-      "5")
         # Remove user certificate
         remove_user
         wait_input;;
-      "6")
+      "5")
         # Generate server files
         gen_files
         wait_input;;
+      "6")
+        # Encrypt CA
+        encrypt_ca
+        wait_input;;
       "7")
+        # Decrypt CA
+        decrypt_ca
+        wait_input;;
+      "8")
         # Initialise server
         init_server
         wait_input;;
@@ -166,27 +191,27 @@ list_all_users() {
 create_user() {
   echo "Creating user certificate"
   read -rp "Username: " CLIENTNAME && \
-  docker run ${CA_PARAMS} easyrsa build-client-full ${CLIENTNAME} && \
-  gen_files
-  get_user $CLIENTNAME
+  docker run $CA_PARAMS easyrsa build-client-full "$CLIENTNAME" && \
+  gen_files && \
+  get_user "$CLIENTNAME"
 }
 
 get_user() {
-  [ -z "$1" ] && (list_valid_users && \
+  [ -z "$1" ] && ((list_valid_users && \
   echo -e "\nSelect a user certificate to retrieve:" && \
-  read -rp "Username: " CLIENTNAME) || (CLIENTNAME="$1") && \
-  mkdir -p ${CLIENT_DIR} && \
-  docker run $CA_PARAMS ovpn_getclient "$CLIENTNAME" > "$CLIENT_DIR"/"$CLIENTNAME".ovpn
+  read -rp "Username: " CLIENTNAME) || (CLIENTNAME="$1")) && \
+  mkdir -p "$CLIENT_DIR" && \
+  docker run $CA_PARAMS ovpn_getclient "$CLIENTNAME" > "$CLIENT_DIR/$CLIENTNAME.ovpn"
 }
 
-revoke_user() {
-  list_valid_users && \
-  echo -e "\nSelect a user certificate to revoke:" && \
-  read -rp "Username: " CLIENTNAME && \
-  docker run $CA_PARAMS ovpn_revokeclient "$CLIENTNAME" && \
-  restart_server && \
-  return 0
-}
+# revoke_user() {
+#   list_valid_users && \
+#   echo -e "\nSelect a user certificate to revoke:" && \
+#   read -rp "Username: " CLIENTNAME && \
+#   docker run $CA_PARAMS ovpn_revokeclient "$CLIENTNAME" && \
+#   restart_server && \
+#   return 0
+# }
 
 remove_user() {
   list_all_users && \
@@ -194,9 +219,9 @@ remove_user() {
   read -rp "Username: " CLIENTNAME && \
   docker run $CA_PARAMS ovpn_revokeclient "$CLIENTNAME" remove) || \
   (echo "Cleaning up remaining files for $CLIENTNAME" && \
-  rm -f $CA_DIR/pki/issued/$CLIENTNAME.crt && \
-  rm -f $CA_DIR/pki/issued/$CLIENTNAME.key && \
-  rm -f $CA_DIR/pki/issued/$CLIENTNAME.req)) &&
+  rm -f "$CA_DIR/pki/issued/$CLIENTNAME.crt" && \
+  rm -f "$CA_DIR/pki/issued/$CLIENTNAME.key" && \
+  rm -f "$CA_DIR/pki/issued/$CLIENTNAME.req")) &&
   return 0
 }
 
@@ -206,12 +231,36 @@ gen_files() {
 
   # Generate files and move to $SERVER_DIR
   echo "Generating VPN server files"
-  docker run ${CA_PARAMS} ovpn_copy_server_files && \
-  rm -rf ${SERVER_DIR} && \
-  mv -f ${CA_DIR}/server ${SERVER_DIR} && \
+  docker run $CA_PARAMS ovpn_copy_server_files && \
+  rm -rf "$SERVER_DIR" && \
+  mv -f "$CA_DIR/server" "$SERVER_DIR" && \
   echo "VPN server files available in '$SERVER_DIR'" && \
   restart_server && \
   return 0
+}
+
+encrypt_ca() {
+  # Return if no CA files exist
+  ! ca_dir_exists && echo "ERROR: No CA files found" && return 1
+
+  # Encrypt CA files if $CA_DIR exists
+  echo "Encrypting CA files"
+  gen_files && \
+  tar -cz -f - "${CA_DIR#"$PWD"/}" | openssl enc -e -aes-256-cbc -md sha512 -pbkdf2 -iter 100000 -out "$CA_ARCHIVE" && \
+  rm -rf "$CA_DIR" && \
+  echo "Encrypted CA files stored in '$CA_ARCHIVE'"
+}
+
+decrypt_ca() {
+  # Return if no CA archive exists
+  [ ! -f "$CA_ARCHIVE" ] && echo "ERROR: No CA archive found" && return 1
+
+  # Decrypt CA files if $CA_ARCHIVE exists
+  echo "Decrypting CA files"
+  rm -rf "$CA_DIR" && \
+  openssl enc -d -aes-256-cbc -md sha512 -pbkdf2 -iter 100000 -in "$CA_ARCHIVE" | tar -xz && \
+  echo "Decrypted CA files available in '$CA_DIR'" && \
+  gen_files
 }
 
 init_server() {
@@ -220,9 +269,9 @@ init_server() {
   echo -e "IMPORTANT: Using a short, insecure CA Root Key Password may cause errors\n"
 
   read -rp "VPN FQDN (Domain): " VPN_DOMAIN && \
-  VPN_DOMAIN=$(echo ${VPN_DOMAIN} | awk '{print tolower($0)}') && \
-  docker run ${CA_PARAMS} ovpn_genconfig -u udp://${VPN_DOMAIN} && \
-  docker run ${CA_PARAMS} ovpn_initpki && \
+  VPN_DOMAIN=$(echo "$VPN_DOMAIN" | awk '{print tolower($0)}') && \
+  docker run $CA_PARAMS ovpn_genconfig -u "udp://$VPN_DOMAIN" && \
+  docker run $CA_PARAMS ovpn_initpki && \
   gen_files && \
   return 0
 }
@@ -272,11 +321,11 @@ print_valid_users() {
   ! ca_dir_exists && echo "ERROR: No CA files found" && return 1
 
   # Get VPN domain
-  DOMAIN=$(grep OVPN_CN $CA_DIR/ovpn_env.sh)
+  DOMAIN=$(grep OVPN_CN "$CA_DIR"/ovpn_env.sh)
   DOMAIN=${DOMAIN#*OVPN_CN=}
 
   # Print all valid certificates available
-  [ "$(sed -E "s|^R.*||g; s|.*CN=||g; s|${DOMAIN}||g; /^$/d" $CA_DIR/pki/index.txt | wc -l)" -gt "0" ] && sed -E "s|^R.*||g; s|.*CN=||g; s|${DOMAIN}||g; /^$/d" $CA_DIR/pki/index.txt && return 0 || return 1
+  [ "$(sed -E "s|^R.*||g; s|.*CN=||g; s|${DOMAIN}||g; /^$/d" "$CA_DIR"/pki/index.txt | wc -l)" -gt "0" ] && sed -E "s|^R.*||g; s|.*CN=||g; s|${DOMAIN}||g; /^$/d" "$CA_DIR"/pki/index.txt && return 0 || return 1
 }
 
 print_all_users() {
@@ -284,33 +333,34 @@ print_all_users() {
   ! ca_dir_exists && echo "ERROR: No CA files found" && return 1
 
   # Get VPN domain
-  DOMAIN=$(grep OVPN_CN $CA_DIR/ovpn_env.sh)
+  DOMAIN=$(grep OVPN_CN "$CA_DIR"/ovpn_env.sh)
   DOMAIN=${DOMAIN#*OVPN_CN=}
 
   # Print all valid certificates available
-  [ "$(ls -w 1 -I "$DOMAIN".crt $CA_DIR/pki/issued/ | sed 's|\.crt||g' | wc -l)" -gt "0" ] && ls -w 1 -I "$DOMAIN".crt $CA_DIR/pki/issued/ | sed 's|\.crt||g' && return 0 || return 1
+  [ "$(ls -w 1 -I "$DOMAIN".crt "$CA_DIR"/pki/issued/ | sed 's|\.crt||g' | wc -l)" -gt "0" ] && ls -w 1 -I "$DOMAIN".crt "$CA_DIR"/pki/issued/ | sed 's|\.crt||g' && return 0 || return 1
 }
 
 ####### Variables #######
 main_opts=("Start Server" "Stop Server" "Restart Server" "Remove Server Container" "Manage Server" "Quit")
-manage_opts=("List User Certificates" "Create User Certificate" "Get User Certificate" "Revoke User Certificate" "Remove User Certificate" "Generate Server Files" "Initialise Server" "Return to Main Menu")
+manage_opts=("List User Certificates" "Create User Certificate" "Get User Certificate" "Remove User Certificate" "Generate Server Files" "Encrypt CA" "Decrypt CA" "Initialise Server" "Return to Main Menu") # "Revoke User Certificate"
 
 DOCKER_IMAGE="silentdigit/openvpn"
 CA_NAME="openvpn_ca"
 SERVER_NAME="openvpn_server"
 
-CLIENT_DIR="${PWD}/clients"
+CA_ARCHIVE="$PWD/ca.tar.gz"
+CLIENT_DIR="$PWD/clients"
 
 if [ -z "$CA_DIR" ]; then
-  CA_DIR=${PWD}/openvpn-data-ca
+  CA_DIR="$PWD/openvpn-data-ca"
 fi
 
 if [ -z "$SERVER_DIR" ]; then
-  SERVER_DIR=${PWD}/openvpn-data-server
+  SERVER_DIR="$PWD/openvpn-data-server"
 fi
 
-CA_PARAMS=" -it --rm --name ${CA_NAME} -v ${CA_DIR}:/etc/openvpn --log-driver=none ${DOCKER_IMAGE}"
-SERVER_PARAMS="-d --name ${SERVER_NAME} -v ${SERVER_DIR}:/etc/openvpn -p 1194:1194/udp --cap-add=NET_ADMIN ${DOCKER_IMAGE}"
+CA_PARAMS="-it --rm --name "$CA_NAME" -v "$CA_DIR":/etc/openvpn --log-driver=none "$DOCKER_IMAGE""
+SERVER_PARAMS="-d --name "$SERVER_NAME" -v "$SERVER_DIR":/etc/openvpn -p 1194:1194/udp --cap-add=NET_ADMIN "$DOCKER_IMAGE""
 
 ####### Start Main Menu #######
 main_menu
