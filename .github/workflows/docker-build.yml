@@ -46,7 +46,7 @@ jobs:
           docker login -u "$USERNAME" -p "$DOCKER_TOKEN"
 
           # Setup build parameters
-          BUILD_PARAMS: --platform="$PLATFORMS" --build-arg VCS_REF=$(git rev-parse --short HEAD) --push
+          BUILD_PARAMS="--platform="$PLATFORMS" --build-arg VCS_REF=$(git rev-parse --short HEAD) --push"
 
           # Build image as tagged version
           TAG=$(date +%y.%m)
