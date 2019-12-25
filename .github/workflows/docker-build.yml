@@ -3,7 +3,7 @@ name: docker build
 on: [push]
 
 env:
-  USERNAME: silentdigit
+  USERNAME: maksimstojkovic
   PROJECT: openvpn
   PLATFORMS: linux/amd64,linux/arm/v7,linux/arm64
   MB_HOOK: https://hooks.microbadger.com/images/silentdigit/openvpn/3K0DVOQdant7j9vY0hpbG-VAdn8=
