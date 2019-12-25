@@ -1,13 +1,13 @@
 # OpenVPN Docker Server Menu
 
-[![Build Status](https://github.com/silentdigit/docker-openvpn/workflows/docker%20build/badge.svg)](https://github.com/silentdigit/docker-openvpn)
-[![Docker Pulls](https://img.shields.io/docker/pulls/silentdigit/nextcloudpi)](https://hub.docker.com/repository/docker/silentdigit/openvpn)
-[![Docker Stars](https://img.shields.io/docker/stars/silentdigit/nextcloudpi)](https://hub.docker.com/repository/docker/silentdigit/openvpn)
-[![Image Size](https://images.microbadger.com/badges/image/silentdigit/openvpn.svg)](https://hub.docker.com/repository/docker/silentdigit/openvpn)
-[![Image Version](https://images.microbadger.com/badges/version/silentdigit/openvpn.svg)](https://hub.docker.com/repository/docker/silentdigit/openvpn)
-[![Image Commit](https://images.microbadger.com/badges/commit/silentdigit/openvpn.svg)](https://github.com/silentdigit/docker-openvpn)
+[![Build Status](https://github.com/maksimstojkovic/docker-openvpn/workflows/docker%20build/badge.svg)](https://github.com/maksimstojkovic/docker-openvpn)
+[![Docker Pulls](https://img.shields.io/docker/pulls/maksimstojkovic/nextcloudpi)](https://hub.docker.com/repository/docker/maksimstojkovic/openvpn)
+[![Docker Stars](https://img.shields.io/docker/stars/maksimstojkovic/nextcloudpi)](https://hub.docker.com/repository/docker/maksimstojkovic/openvpn)
+[![Image Size](https://images.microbadger.com/badges/image/maksimstojkovic/openvpn.svg)](https://hub.docker.com/repository/docker/maksimstojkovic/openvpn)
+[![Image Version](https://images.microbadger.com/badges/version/maksimstojkovic/openvpn.svg)](https://hub.docker.com/repository/docker/maksimstojkovic/openvpn)
+[![Image Commit](https://images.microbadger.com/badges/commit/maksimstojkovic/openvpn.svg)](https://github.com/maksimstojkovic/docker-openvpn)
 
-Bash menu for managing an OpenVPN Docker server. This repository provides a console interface for using [`silentdigit/openvpn`](https://hub.docker.com/repository/docker/silentdigit/openvpn) which supports all major linux architectures.
+Bash menu for managing an OpenVPN Docker server. This repository provides a console interface for using [`maksimstojkovic/openvpn`](https://hub.docker.com/repository/docker/maksimstojkovic/openvpn) which supports all major linux architectures.
 
 The menu provides functionality for initialising a Certificate Authority (CA), issuing user certificates, generating a minimal set of server files which excludes the CA root key, and encryption of vulnerable CA files.
 
