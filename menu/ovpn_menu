@@ -344,7 +344,7 @@ print_all_users() {
 main_opts=("Start Server" "Stop Server" "Restart Server" "Remove Server Container" "Manage Server" "Quit")
 manage_opts=("List User Certificates" "Create User Certificate" "Get User Certificate" "Remove User Certificate" "Generate Server Files" "Encrypt CA" "Decrypt CA" "Initialise Server" "Return to Main Menu") # "Revoke User Certificate"
 
-DOCKER_IMAGE="silentdigit/openvpn"
+DOCKER_IMAGE="maksimstojkovic/openvpn"
 CA_NAME="openvpn_ca"
 SERVER_NAME="openvpn_server"
 
@@ -360,7 +360,7 @@ if [ -z "$SERVER_DIR" ]; then
 fi
 
 CA_PARAMS="-it --rm --name "$CA_NAME" -v "$CA_DIR":/etc/openvpn --log-driver=none "$DOCKER_IMAGE""
-SERVER_PARAMS="-d --name "$SERVER_NAME" -v "$SERVER_DIR":/etc/openvpn -p 1194:1194/udp --cap-add=NET_ADMIN "$DOCKER_IMAGE""
+SERVER_PARAMS="-d --name "$SERVER_NAME" -v "$SERVER_DIR":/etc/openvpn --restart unless-stopped -p 1194:1194/udp --cap-add=NET_ADMIN "$DOCKER_IMAGE""
 
 ####### Start Main Menu #######
 main_menu
