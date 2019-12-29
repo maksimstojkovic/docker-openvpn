@@ -363,4 +363,9 @@ CA_PARAMS="-it --rm --name "$CA_NAME" -v "$CA_DIR":/etc/openvpn --log-driver=non
 SERVER_PARAMS="-d --name "$SERVER_NAME" -v "$SERVER_DIR":/etc/openvpn --restart unless-stopped -p 1194:1194/udp --cap-add=NET_ADMIN "$DOCKER_IMAGE""
 
 ####### Start Main Menu #######
+
+# Require script to run as root
+[ "$EUID" -ne "0" ] && echo "Run script with sudo, or switch to root user" && exit 1
+
+# Run menu
 main_menu
