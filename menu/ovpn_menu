@@ -268,7 +268,8 @@ decrypt_ca() {
 
 init_server() {
   # Return if CA already exists
-  { [ -f "$CA_DIR/pki/crl.pem" ] || [ -d "$SERVER_DIR" ] || [ -d "$CLIENT_DIR" ]; } && \
+  { [ -f "$CA_DIR/pki/crl.pem" ] || [ -d "$SERVER_DIR" ] || \
+    [ -d "$CLIENT_DIR" ] || [ -f "$CA_ARCHIVE" ]; } && \
   echo "ERROR: CA already exists" && return 1
 
   # Initialise CA
