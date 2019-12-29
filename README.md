@@ -1,8 +1,8 @@
 # OpenVPN Docker Server Menu
 
 [![Build Status](https://github.com/maksimstojkovic/docker-openvpn/workflows/docker%20build/badge.svg)](https://github.com/maksimstojkovic/docker-openvpn)
-[![Docker Pulls](https://img.shields.io/docker/pulls/maksimstojkovic/nextcloudpi)](https://hub.docker.com/repository/docker/maksimstojkovic/openvpn)
-[![Docker Stars](https://img.shields.io/docker/stars/maksimstojkovic/nextcloudpi)](https://hub.docker.com/repository/docker/maksimstojkovic/openvpn)
+[![Docker Pulls](https://img.shields.io/docker/pulls/maksimstojkovic/openvpn)](https://hub.docker.com/repository/docker/maksimstojkovic/openvpn)
+[![Docker Stars](https://img.shields.io/docker/stars/maksimstojkovic/openvpn)](https://hub.docker.com/repository/docker/maksimstojkovic/openvpn)
 [![Image Size](https://images.microbadger.com/badges/image/maksimstojkovic/openvpn.svg)](https://hub.docker.com/repository/docker/maksimstojkovic/openvpn)
 [![Image Version](https://images.microbadger.com/badges/version/maksimstojkovic/openvpn.svg)](https://hub.docker.com/repository/docker/maksimstojkovic/openvpn)
 [![Image Commit](https://images.microbadger.com/badges/commit/maksimstojkovic/openvpn.svg)](https://github.com/maksimstojkovic/docker-openvpn)
