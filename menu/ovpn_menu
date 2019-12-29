@@ -74,12 +74,12 @@ start_server() {
 
 stop_server() {
   # Return if server container does not exist
-  ! container_exists $SERVER_NAME && \
+  ! container_exists "$SERVER_NAME" && \
   echo "No VPN server container exists" && \
   return 0
 
   # Stop server if container is running
-  container_running $SERVER_NAME && \
+  container_running "$SERVER_NAME" && \
   (echo "Stopping VPN server" && \
   docker stop "$SERVER_NAME") || \
   (echo "VPN server already stopped")
@@ -197,11 +197,14 @@ create_user() {
 }
 
 get_user() {
-  [ -z "$1" ] && ((list_valid_users && \
+  { { [ -z "$1" ] && list_valid_users && \
   echo -e "\nSelect a user certificate to retrieve:" && \
-  read -rp "Username: " CLIENTNAME) || (CLIENTNAME="$1")) && \
+  read -rp "Username: " CLIENTNAME; } || { CLIENTNAME="$1"; }; } && \
+  echo "Retrieving certificate for user '$CLIENTNAME'" && \
   mkdir -p "$CLIENT_DIR" && \
-  docker run $CA_PARAMS ovpn_getclient "$CLIENTNAME" > "$CLIENT_DIR/$CLIENTNAME.ovpn"
+  rm -f "$CLIENT_DIR/$CLIENTNAME.ovpn" && \
+  docker run $CA_PARAMS ovpn_getclient "$CLIENTNAME" > "$CLIENT_DIR/$CLIENTNAME.ovpn" && \
+  echo "'$CLIENTNAME.ovpn' available in '$CLIENT_DIR'"
 }
 
 # revoke_user() {
@@ -220,8 +223,8 @@ remove_user() {
   docker run $CA_PARAMS ovpn_revokeclient "$CLIENTNAME" remove) || \
   (echo "Cleaning up remaining files for $CLIENTNAME" && \
   rm -f "$CA_DIR/pki/issued/$CLIENTNAME.crt" && \
-  rm -f "$CA_DIR/pki/issued/$CLIENTNAME.key" && \
-  rm -f "$CA_DIR/pki/issued/$CLIENTNAME.req")) &&
+  rm -f "$CA_DIR/pki/private/$CLIENTNAME.key" && \
+  rm -f "$CA_DIR/pki/reqs/$CLIENTNAME.req")) && \
   return 0
 }
 
@@ -325,7 +328,9 @@ print_valid_users() {
   DOMAIN=${DOMAIN#*OVPN_CN=}
 
   # Print all valid certificates available
-  [ "$(sed -E "s|^R.*||g; s|.*CN=||g; s|${DOMAIN}||g; /^$/d" "$CA_DIR"/pki/index.txt | wc -l)" -gt "0" ] && sed -E "s|^R.*||g; s|.*CN=||g; s|${DOMAIN}||g; /^$/d" "$CA_DIR"/pki/index.txt && return 0 || return 1
+  [ "$(sed -E "s|^R.*||g; s|.*CN=||g; s|${DOMAIN}||g; /^$/d" "$CA_DIR/pki/index.txt" | wc -l)" -gt "0" ] && \
+  sed -E "s|^R.*||g; s|.*CN=||g; s|${DOMAIN}||g; /^$/d" "$CA_DIR/pki/index.txt" && \
+  return 0 || return 1
 }
 
 print_all_users() {
@@ -333,11 +338,13 @@ print_all_users() {
   ! ca_dir_exists && echo "ERROR: No CA files found" && return 1
 
   # Get VPN domain
-  DOMAIN=$(grep OVPN_CN "$CA_DIR"/ovpn_env.sh)
+  DOMAIN=$(grep OVPN_CN "$CA_DIR/ovpn_env.sh")
   DOMAIN=${DOMAIN#*OVPN_CN=}
 
   # Print all valid certificates available
-  [ "$(ls -w 1 -I "$DOMAIN".crt "$CA_DIR"/pki/issued/ | sed 's|\.crt||g' | wc -l)" -gt "0" ] && ls -w 1 -I "$DOMAIN".crt "$CA_DIR"/pki/issued/ | sed 's|\.crt||g' && return 0 || return 1
+  [ "$(ls -w 1 -I "$DOMAIN.req" "$CA_DIR/pki/reqs/" | wc -l)" -gt "0" ] && \
+  ls -w 1 -I "$DOMAIN.req" "$CA_DIR/pki/reqs/" | sed 's|\.req||g' && \
+  return 0 || return 1
 }
 
 ####### Variables #######
@@ -359,8 +366,8 @@ if [ -z "$SERVER_DIR" ]; then
   SERVER_DIR="$PWD/openvpn-data-server"
 fi
 
-CA_PARAMS="-it --rm --name "$CA_NAME" -v "$CA_DIR":/etc/openvpn --log-driver=none "$DOCKER_IMAGE""
-SERVER_PARAMS="-d --name "$SERVER_NAME" -v "$SERVER_DIR":/etc/openvpn --restart unless-stopped -p 1194:1194/udp --cap-add=NET_ADMIN "$DOCKER_IMAGE""
+CA_PARAMS="-it --rm --name "$CA_NAME" -v "$CA_DIR:/etc/openvpn" --log-driver=none "$DOCKER_IMAGE""
+SERVER_PARAMS="-d --name "$SERVER_NAME" -v "$SERVER_DIR:/etc/openvpn" --restart unless-stopped -p 1194:1194/udp --cap-add=NET_ADMIN "$DOCKER_IMAGE""
 
 ####### Start Main Menu #######
 
