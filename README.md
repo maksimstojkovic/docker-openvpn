@@ -18,7 +18,7 @@ The menu assumes that CA and server files will be generated in the current worki
 Start the menu using:
 
 ```
-bash <path-to-repo>/menu/ovpn_menu
+sudo bash <path-to-repo>/menu/ovpn_menu
 ```
 
 ## Features
