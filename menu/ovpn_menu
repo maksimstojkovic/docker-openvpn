@@ -276,7 +276,7 @@ init_server() {
   docker run $CA_PARAMS ovpn_genconfig -u "udp://$VPN_DOMAIN" && \
   docker run $CA_PARAMS ovpn_initpki && \
   gen_files && \
-  return 0
+  return 0 || { echo "ERROR: Invalid input" && rm -rf "$CA_DIR" "$SERVER_DIR" "$CLIENT_DIR"; }
 }
 
 ####### Utility Functions #######
