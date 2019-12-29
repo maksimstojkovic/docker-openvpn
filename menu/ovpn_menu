@@ -271,12 +271,12 @@ init_server() {
   echo "Enter your VPN Domain or CA Root Key Password when required"
   echo -e "IMPORTANT: Using a short, insecure CA Root Key Password may cause errors\n"
 
-  read -rp "VPN FQDN (Domain): " VPN_DOMAIN && \
-  VPN_DOMAIN=$(echo "$VPN_DOMAIN" | awk '{print tolower($0)}') && \
+  read -rp "VPN FQDN (Domain): " VPN_DOMAIN
+  VPN_DOMAIN=$(echo "$VPN_DOMAIN" | awk '{print tolower($0)}')
   docker run $CA_PARAMS ovpn_genconfig -u "udp://$VPN_DOMAIN" && \
   docker run $CA_PARAMS ovpn_initpki && \
   gen_files && \
-  return 0 || { echo "ERROR: Invalid input" && rm -rf "$CA_DIR" "$SERVER_DIR" "$CLIENT_DIR"; }
+  return 0 || { echo "ERROR: Invalid input" && return 1; }
 }
 
 ####### Utility Functions #######
