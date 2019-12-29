@@ -267,6 +267,10 @@ decrypt_ca() {
 }
 
 init_server() {
+  # Return if CA already exists
+  [ -f "$CA_DIR/pki/crl.pem" ] && echo "ERROR: CA already exists" && return 1
+
+  # Initialise CA
   echo "Initialising VPN CA"
   echo "Enter your VPN Domain or CA Root Key Password when required"
   echo -e "IMPORTANT: Using a short, insecure CA Root Key Password may cause errors\n"
