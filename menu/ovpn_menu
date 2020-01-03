@@ -193,7 +193,8 @@ create_user() {
   read -rp "Username: " CLIENTNAME && \
   docker run $CA_PARAMS easyrsa build-client-full "$CLIENTNAME" && \
   gen_files && \
-  get_user "$CLIENTNAME"
+  get_user "$CLIENTNAME" && \
+  unset CLIENTNAME
 }
 
 get_user() {
@@ -204,7 +205,8 @@ get_user() {
   mkdir -p "$CLIENT_DIR" && \
   rm -f "$CLIENT_DIR/$CLIENTNAME.ovpn" && \
   docker run $CA_PARAMS ovpn_getclient "$CLIENTNAME" > "$CLIENT_DIR/$CLIENTNAME.ovpn" && \
-  echo "'$CLIENTNAME.ovpn' available in '$CLIENT_DIR'"
+  echo "'$CLIENTNAME.ovpn' available in '$CLIENT_DIR'" && \
+  unset CLIENTNAME
 }
 
 # revoke_user() {
@@ -225,7 +227,7 @@ remove_user() {
   rm -f "$CA_DIR/pki/issued/$CLIENTNAME.crt" && \
   rm -f "$CA_DIR/pki/private/$CLIENTNAME.key" && \
   rm -f "$CA_DIR/pki/reqs/$CLIENTNAME.req")) && \
-  return 0
+  unset CLIENTNAME
 }
 
 gen_files() {
@@ -282,7 +284,7 @@ init_server() {
   docker run $CA_PARAMS ovpn_genconfig -u "udp://$VPN_DOMAIN" && \
   docker run $CA_PARAMS ovpn_initpki && \
   gen_files && \
-  return 0 || { echo "ERROR: Invalid input" && return 1; }
+  unset VPN_DOMAIN || { echo "ERROR: Invalid input" && unset VPN_DOMAIN && return 1; }
 }
 
 ####### Utility Functions #######
@@ -373,7 +375,7 @@ if [ -z "$SERVER_DIR" ]; then
 fi
 
 CA_PARAMS="-it --rm --name "$CA_NAME" -v "$CA_DIR:/etc/openvpn" --log-driver=none "$DOCKER_IMAGE""
-SERVER_PARAMS="-d --name "$SERVER_NAME" -v "$SERVER_DIR:/etc/openvpn" --restart unless-stopped -p 1194:1194/udp --cap-add=NET_ADMIN "$DOCKER_IMAGE""
+SERVER_PARAMS="-d --name "$SERVER_NAME" -v "$SERVER_DIR:/etc/openvpn" --restart unless-stopped -p 1194:1194/udp --privileged "$DOCKER_IMAGE""
 
 ####### Start Main Menu #######
 
