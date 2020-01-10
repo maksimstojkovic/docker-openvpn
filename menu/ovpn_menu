@@ -65,6 +65,9 @@ start_server() {
   echo "Updating VPN server files" && \
   gen_files
 
+  # Update server parameters
+  update_port
+
   # Start server if it exists, otherwise run a new server container
   echo "Starting VPN server" && \
   container_exists "$SERVER_NAME" && \
@@ -279,11 +282,12 @@ init_server() {
   echo "Enter your VPN Domain or CA Root Key Password when required"
   echo -e "IMPORTANT: Using a short, insecure CA Root Key Password may cause errors\n"
 
-  read -rp "VPN FQDN (Domain): " VPN_DOMAIN
+  read -rp "VPN FQDN (use the format '<domain>:<udp-port>'): " VPN_DOMAIN
   VPN_DOMAIN=$(echo "$VPN_DOMAIN" | awk '{print tolower($0)}')
   docker run $CA_PARAMS ovpn_genconfig -u "udp://$VPN_DOMAIN" && \
   docker run $CA_PARAMS ovpn_initpki && \
   gen_files && \
+  update_port && \
   unset VPN_DOMAIN || { echo "ERROR: Invalid input" && unset VPN_DOMAIN && return 1; }
 }
 
@@ -291,6 +295,23 @@ init_server() {
 wait_input() {
   echo -e "\nPress ENTER to Continue"
   read -n 1 -s
+}
+
+update_port() {
+  # Update server port
+  if [ -f "$CA_DIR/ovpn_env.sh" ]; then
+    SERVER_PORT=$(grep "OVPN_PORT" "$CA_DIR/ovpn_env.sh")
+    SERVER_PORT=${SERVER_PORT#*OVPN_PORT=}
+  elif [ -f "$SERVER_DIR/ovpn_env.sh" ]; then
+    SERVER_PORT=$(grep "OVPN_PORT" "$SERVER_DIR/ovpn_env.sh")
+    SERVER_PORT=${SERVER_PORT#*OVPN_PORT=}
+  fi
+  [ -z "$SERVER_PORT" ] && SERVER_PORT=1194
+
+  # Update server parameters
+  SERVER_PARAMS="-d --name "$SERVER_NAME" -v "$SERVER_DIR:/etc/openvpn" --restart unless-stopped -p $SERVER_PORT:1194/udp --cap-add=NET_ADMIN "$DOCKER_IMAGE""
+
+  echo "Server parameters updated"
 }
 
 print_menu() {
@@ -375,12 +396,13 @@ if [ -z "$SERVER_DIR" ]; then
 fi
 
 CA_PARAMS="-it --rm --name "$CA_NAME" -v "$CA_DIR:/etc/openvpn" --log-driver=none "$DOCKER_IMAGE""
-SERVER_PARAMS="-d --name "$SERVER_NAME" -v "$SERVER_DIR:/etc/openvpn" --restart unless-stopped -p 1194:1194/udp --privileged "$DOCKER_IMAGE""
 
 ####### Start Main Menu #######
-
 # Require script to run as root
 [ "$EUID" -ne "0" ] && echo "Run script with sudo, or switch to root user" && exit 1
+
+# Update server port if available
+update_port
 
 # Run menu
 main_menu
