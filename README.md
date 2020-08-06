@@ -32,6 +32,12 @@ To increase security, manage the CA Root Key on another device (not the VPN serv
 7. Retrieve the client certificates using `get-cert <user>` and install it on client devices.
 8. Start the server using `start-server` and connect to the VPN server.
 
+NOTE: To make devices on the server's local network accessible to VPN clients, include the following in the menu's optional arguments section (`xxx.xxx.xxx.0` is the server network subnet, e.g. `192.168.1.0`):
+
+```
+-p route xxx.xxx.xxx.0 255.255.255.0
+```
+
 ## Features
 
 Initialising the CA automatically generates:
