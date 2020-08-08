@@ -21,8 +21,8 @@ mkdir -p "${TARGET}"
 ## Ensure that no other keys than the one for the server is present.
 rm -rf "$TARGET/pki/private" "$TARGET/pki/issued"
 
-# Remove otp files for users that are not valid
-rm -rf "$TARGET/otp"
+## Remove otp files for users that are not valid
+#rm -rf "$TARGET/otp"
 
 FILES=(
     "openvpn.conf"
@@ -33,7 +33,7 @@ FILES=(
     "pki/ta.key"
     "pki/ca.crt"
     "ccd"
-    "otp"
+#    "otp"
 )
 
 if [ -f "${OPENVPN}/pki/crl.pem" ]; then
@@ -41,7 +41,7 @@ if [ -f "${OPENVPN}/pki/crl.pem" ]; then
 fi
 
 # Ensure the ccd and otp directories exists, even if empty
-mkdir -p "ccd" "otp"
+mkdir -p "ccd" # "otp"
 
 # rsync isn't available to keep size down
 # cp --parents isn't in busybox version
