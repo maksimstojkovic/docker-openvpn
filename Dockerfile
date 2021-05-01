@@ -2,7 +2,6 @@
 FROM alpine:3.13
 
 # Maintainer information
-ARG VCS_REF
 LABEL maintainer="Maksim Stojkovic <https://github.com/maksimstojkovic>"
 
 # Testing: pamtester
