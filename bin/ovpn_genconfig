@@ -103,7 +103,7 @@ usage() {
     echo " -N    Configure NAT to access external server network"
     echo " -t    Use TAP device (instead of TUN device)"
     echo " -T    Encrypt packets with the given cipher algorithm instead of the default one (tls-cipher)."
-    echo " -z    Enable comp-lzo compression."
+    # echo " -z    Enable comp-lzo compression." # removed in new versions of openvpn
 }
 
 process_route_config() {
@@ -146,7 +146,7 @@ OVPN_AUTH=''
 OVPN_CIPHER=''
 OVPN_CLIENT_TO_CLIENT=''
 OVPN_CN=''
-OVPN_COMP_LZO=0
+# OVPN_COMP_LZO=0 # removed in new versions of openvpn
 OVPN_DEFROUTE=1
 OVPN_DEVICE="tun"
 OVPN_DEVICEN=0
@@ -244,9 +244,9 @@ while getopts ":a:e:E:C:T:r:s:du:bcp:n:k:DNm:f:tz2" opt; do
         t)
             OVPN_DEVICE="tap"
             ;;
-        z)
-            OVPN_COMP_LZO=1
-            ;;
+        # z) # removed in new versions of openvpn
+        #     OVPN_COMP_LZO=1
+        #     ;;
         2)
             OVPN_OTP_AUTH=1
             ;;
@@ -272,7 +272,7 @@ done
 [ ! -d "${OPENVPN:-}/ccd" ] && mkdir -p ${OPENVPN:-}/ccd
 
 # Server name is in the form "udp://vpn.example.com:1194"
-if [[ "${OVPN_SERVER_URL:-}" =~ ^((udp|tcp|udp6|tcp6)://)?([0-9a-zA-Z\.\-]+)(:([0-9]+))?$ ]]; then
+if [[ "${OVPN_SERVER_URL:-}" =~ ^((udp|tcp|udp4|tcp4|udp6|tcp6)://)?([0-9a-zA-Z\.\-]+)(:([0-9]+))?$ ]]; then
     OVPN_PROTO=${BASH_REMATCH[2]};
     OVPN_CN=${BASH_REMATCH[3]};
     OVPN_PORT=${BASH_REMATCH[5]};
@@ -347,12 +347,12 @@ else
 fi
 
 [ -n "$OVPN_TLS_CIPHER" ] && echo "tls-cipher $OVPN_TLS_CIPHER" >> "$conf"
-[ -n "$OVPN_CIPHER" ] && echo "cipher $OVPN_CIPHER" >> "$conf"
+[ -n "$OVPN_CIPHER" ] && echo "data-ciphers $OVPN_CIPHER" >> "$conf"
 [ -n "$OVPN_AUTH" ] && echo "auth $OVPN_AUTH" >> "$conf"
 
 [ -n "${OVPN_CLIENT_TO_CLIENT:-}" ] && echo "client-to-client" >> "$conf"
-[ "$OVPN_COMP_LZO" == "1" ] && echo "comp-lzo" >> "$conf"
-[ "$OVPN_COMP_LZO" == "0" ] && echo "comp-lzo no" >> "$conf"
+# [ "$OVPN_COMP_LZO" == "1" ] && echo "comp-lzo" >> "$conf" # removed in new versions of openvpn
+# [ "$OVPN_COMP_LZO" == "0" ] && echo "comp-lzo no" >> "$conf" # removed in new versions of openvpn
 
 [ -n "${OVPN_FRAGMENT:-}" ] && echo "fragment $OVPN_FRAGMENT" >> "$conf"
 
@@ -370,9 +370,9 @@ fi
   process_push_config "dhcp-option DNS $i"
 done
 
-if [ "$OVPN_COMP_LZO" == "0" ]; then
-    process_push_config "comp-lzo no"
-fi
+# if [ "$OVPN_COMP_LZO" == "0" ]; then # removed in new versions of openvpn
+#     process_push_config "comp-lzo no"
+# fi
 
 [ ${#OVPN_PUSH[@]} -gt 0 ] && for i in "${OVPN_PUSH[@]}"; do
   process_push_config "$i"

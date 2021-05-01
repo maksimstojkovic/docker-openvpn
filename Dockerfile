@@ -1,5 +1,5 @@
 # Smallest base image (modified for stability)
-FROM alpine:3.8
+FROM alpine:3.13
 
 # Maintainer information
 ARG VCS_REF
