@@ -95,7 +95,8 @@ usage() {
     echo " -a    Authenticate  packets with HMAC using the given message digest algorithm (auth)."
     echo " -b    Disable 'push block-outside-dns'"
     echo " -c    Enable client-to-client option"
-    echo " -C    A list of allowable TLS ciphers delimited by a colon (cipher)."
+    echo " -C    A list of allowable TLS ciphers delimited by a colon (data-ciphers)."
+    echo " -F    Fallback TLS cipher (data-ciphers-fallback)."
     echo " -d    Disable default route"
     echo " -D    Do not push dns servers"
     echo " -k    Set keepalive. Default: '10 60'"
@@ -144,6 +145,7 @@ fi
 
 OVPN_AUTH=''
 OVPN_CIPHER=''
+OVPN_CIPHER_FALLBACK=''
 OVPN_CLIENT_TO_CLIENT=''
 OVPN_CN=''
 # OVPN_COMP_LZO=0 # removed in new versions of openvpn
@@ -172,7 +174,7 @@ OVPN_TLS_CIPHER=''
 [ -r "$OVPN_ENV" ] && source "$OVPN_ENV"
 
 # Parse arguments
-while getopts ":a:e:E:C:T:r:s:du:bcp:n:k:DNm:f:tz2" opt; do
+while getopts ":a:e:E:C:F:T:r:s:du:bcp:n:k:DNm:f:tz2" opt; do
     case $opt in
         a)
             OVPN_AUTH="$OPTARG"
@@ -192,6 +194,8 @@ while getopts ":a:e:E:C:T:r:s:du:bcp:n:k:DNm:f:tz2" opt; do
         C)
             OVPN_CIPHER="$OPTARG"
             ;;
+        F)
+            OVPN_CIPHER_FALLBACK="$OPTARG"
         T)
             OVPN_TLS_CIPHER="$OPTARG"
             ;;
@@ -288,6 +292,7 @@ set +u
 [ -z "$OVPN_DNS_SERVERS" ] && OVPN_DNS_SERVERS=("8.8.8.8" "8.8.4.4")
 [ -z "$OVPN_PROTO" ] && OVPN_PROTO=udp
 [ -z "$OVPN_PORT" ] && OVPN_PORT=1194
+[ -z "$OVPN_CIPHER_FALLBACK" ] && OVPN_CIPHER_FALLBACK="AES-256-CBC"
 set -u
 [ "${#OVPN_ROUTES[@]}" == "0" ] && [ "$OVPN_DEFROUTE" == "1" ] && OVPN_ROUTES+=("192.168.254.0/24")
 
@@ -348,6 +353,7 @@ fi
 
 [ -n "$OVPN_TLS_CIPHER" ] && echo "tls-cipher $OVPN_TLS_CIPHER" >> "$conf"
 [ -n "$OVPN_CIPHER" ] && echo "data-ciphers $OVPN_CIPHER" >> "$conf"
+[ -n "$OVPN_CIPHER_FALLBACK" ] && echo "data-ciphers-fallback $OVPN_CIPHER_FALLBACK" >> "$conf"
 [ -n "$OVPN_AUTH" ] && echo "auth $OVPN_AUTH" >> "$conf"
 
 [ -n "${OVPN_CLIENT_TO_CLIENT:-}" ] && echo "client-to-client" >> "$conf"
