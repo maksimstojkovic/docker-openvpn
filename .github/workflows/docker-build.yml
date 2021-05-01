@@ -6,7 +6,6 @@ env:
   USERNAME: maksimstojkovic
   PROJECT: openvpn
   PLATFORMS: linux/amd64,linux/arm/v7,linux/arm64
-  MB_HOOK: https://hooks.microbadger.com/images/silentdigit/openvpn/3K0DVOQdant7j9vY0hpbG-VAdn8=
 
 jobs:
   buildx:
@@ -41,12 +40,13 @@ jobs:
         name: Build and Push
         env:
           DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+          CR_TOKEN: ${{ secrets.CR_TOKEN }}
         run: |
           # Login
-          docker login -u "$USERNAME" -p "$DOCKER_TOKEN"
+          echo $DOCKER_TOKEN | docker login -u "$USERNAME" --password-stdin
 
           # Setup build parameters
-          BUILD_PARAMS="--platform="$PLATFORMS" --build-arg VCS_REF=$(git rev-parse --short HEAD) --push"
+          BUILD_PARAMS="--platform="$PLATFORMS" --push"
 
           # Build image as tagged version
           TAG=$(date +%y.%m)
@@ -56,5 +56,13 @@ jobs:
           TAG=latest
           docker buildx build -t "$USERNAME"/"$PROJECT":"$TAG" $BUILD_PARAMS .
 
-          # Update MicroBadger metadata
-          curl -X POST "$MB_HOOK"
+          # Repeat with docker packages
+          echo $CR_TOKEN | docker login ghcr.io -u "$USERNAME" --password-stdin
+
+          # Build image as tagged version
+          TAG=$(date +%y.%m)
+          docker buildx build -t ghcr.io/"$USERNAME"/"$PROJECT":"$TAG" $BUILD_PARAMS .
+
+          # Build image as latest version
+          TAG=latest
+          docker buildx build -t ghcr.io/"$USERNAME"/"$PROJECT":"$TAG" $BUILD_PARAMS .

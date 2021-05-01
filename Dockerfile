@@ -3,9 +3,7 @@ FROM alpine:3.8
 
 # Maintainer information
 ARG VCS_REF
-LABEL maintainer="Maksim Stojkovic <https://github.com/maksimstojkovic>" \
-      org.label-schema.vcs-ref=$VCS_REF \
-      org.label-schema.vcs-url="https://github.com/maksimstojkovic/docker-openvpn"
+LABEL maintainer="Maksim Stojkovic <https://github.com/maksimstojkovic>"
 
 # Testing: pamtester
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing/" >> /etc/apk/repositories && \
