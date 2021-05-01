@@ -85,19 +85,21 @@ if [ -r "$OPENVPN/crl.pem" ]; then
     addArg "--crl-verify" "$OPENVPN/crl.pem"
 fi
 
-ip -6 route show default 2>/dev/null
-if [ $? = 0 ]; then
-    echo "Checking IPv6 Forwarding"
-    if [ "$(</proc/sys/net/ipv6/conf/all/disable_ipv6)" != "0" ]; then
-        echo "Sysctl error for disable_ipv6, please run docker with '--sysctl net.ipv6.conf.all.disable_ipv6=0'"
-    fi
+if [ "$OVPN_PROTO" != "udp4" ] && [ "$OVPN_PROTO" != "tcp4" ]; then
+    ip -6 route show default 2>/dev/null
+    if [ $? = 0 ]; then
+        echo "Checking IPv6 Forwarding"
+        if [ "$(</proc/sys/net/ipv6/conf/all/disable_ipv6)" != "0" ]; then
+            echo "Sysctl error for disable_ipv6, please run docker with '--sysctl net.ipv6.conf.all.disable_ipv6=0'"
+        fi
 
-    if [ "$(</proc/sys/net/ipv6/conf/default/forwarding)" != "1" ]; then
-        echo "Sysctl error for default forwarding, please run docker with '--sysctl net.ipv6.conf.default.forwarding=1'"
-    fi
+        if [ "$(</proc/sys/net/ipv6/conf/default/forwarding)" != "1" ]; then
+            echo "Sysctl error for default forwarding, please run docker with '--sysctl net.ipv6.conf.default.forwarding=1'"
+        fi
 
-    if [ "$(</proc/sys/net/ipv6/conf/all/forwarding)" != "1" ]; then
-        echo "Sysctl error for all forwarding, please run docker with '--sysctl net.ipv6.conf.all.forwarding=1'"
+        if [ "$(</proc/sys/net/ipv6/conf/all/forwarding)" != "1" ]; then
+            echo "Sysctl error for all forwarding, please run docker with '--sysctl net.ipv6.conf.all.forwarding=1'"
+        fi
     fi
 fi
 
